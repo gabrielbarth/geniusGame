@@ -10,7 +10,7 @@ const styles = StyleSheet.create({
         flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: colors.background
+        backgroundColor: colors.background,
     },
     gameWrapper: {
         width: getResponsiveHeight(60),
@@ -19,7 +19,7 @@ const styles = StyleSheet.create({
         backgroundColor: colors.black,
         alignItems: 'center',
         justifyContent: 'center',
-        elevation: 20
+        elevation: 20,
     },
     bottomWrapper: {
         flexDirection: 'row'       
