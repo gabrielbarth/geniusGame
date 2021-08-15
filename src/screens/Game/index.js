@@ -1,19 +1,34 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { Text, View, TouchableOpacity } from 'react-native';
+import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
+import { Text, View, TouchableOpacity, Alert } from 'react-native';
 import { tint } from 'polished';
 
 import { EPadColor } from '../../utils/enums/EPadColor';
 import { playSound } from '../../utils/playSound';
 import { song } from '../../utils/padSongs';
 
+import { useGameContext } from '../../context';
+
+import { ButtonIcon } from '../../components/ButtonIcon';
+
 import { colors } from '../../styles/colors';
 import { styles } from './styles';
+import { EDifficultyLevel } from '../../utils/enums/EDifficultyLevel';
 
 const Game = () => {
+    const {
+        difficultyLevel,
+        userMaxScore,
+        updateUserMaxScore,
+        toggleDifficultyModal
+    } = useGameContext();
+
     const computerPadTrackRecord = useRef([]);
     const userPadTrackRecord = useRef([]);
+
     const [computerPadPressed, setComputerPadPressed] = useState(null);
-    const [maxScore, setMaxScore] = useState(0);
+    const [userScore, setUserScore] = useState(0);
+    const [computerPlaying, setIsComputerPlaying] = useState(false);
+    const [isLostGame, setIsLostGame] = useState(false);
 
     useEffect(() => {
         return () => {
@@ -24,20 +39,32 @@ const Game = () => {
 
     const pickupNextPadToPlay = () => Math.floor(Math.random() * (4)) + 1;
 
+
     const isCorrectAnwser = () =>
-        JSON.stringify(computerPadTrackRecord.current) === JSON.stringify(userPadTrackRecord.current);
+        JSON.stringify(computerPadTrackRecord.current) === JSON.stringify(userPadTrackRecord.current)
 
-    const updateUserRecord = (score) => {
-        if (maxScore < score) setMaxScore(score)
-    }
+    const getDifficultyLevelTime = () => {
+        if (difficultyLevel == EDifficultyLevel.HARD) return 500;
+        if (difficultyLevel == EDifficultyLevel.MEDIUM) return 1000;
+        else return 1500;
+    };
 
-    const computerPlayPad = () => {
-        const nextPadToPlay = pickupNextPadToPlay();
-        computerPadTrackRecord.current = [...computerPadTrackRecord.current, nextPadToPlay];
-        const challengeLength = computerPadTrackRecord.current.length;
+    const computerPlayPad = (newTrack = false) => {
+        setIsComputerPlaying(true);
+
+        if (newTrack) {
+            computerPadTrackRecord.current = [];
+            setUserScore(0);
+        }
 
         let i = 0;
+        let nextPadToPlay = null;
+        const difficultyLevelTime = getDifficultyLevelTime();
+
         playComputerPadTrackRecord();
+        nextPadToPlay = pickupNextPadToPlay();
+        computerPadTrackRecord.current = [...computerPadTrackRecord.current, nextPadToPlay];
+        const challengeLength = computerPadTrackRecord.current.length;
 
         function playComputerPadTrackRecord() {
             setTimeout(() => {
@@ -47,16 +74,18 @@ const Game = () => {
 
                 if (i < challengeLength)
                     playComputerPadTrackRecord();
+                else
+                    setIsComputerPlaying(false);
 
                 setTimeout(() => {
                     setComputerPadPressed(null)
-                }, 500);
-            }, 1000);
+                }, (difficultyLevelTime / 2));
+            }, difficultyLevelTime);
+
         }
+    };
 
-    }
-
-    const handlePlayPad = (padType, isUserPlaying) => {
+    const handlePlayPad = async (padType, isUserPlaying) => {
         if (padType == EPadColor.GREEN) playSound(song.green, this);
         if (padType == EPadColor.RED) playSound(song.red, this);
         if (padType == EPadColor.YELLOW) playSound(song.yellow, this);
@@ -67,23 +96,42 @@ const Game = () => {
 
             if (userPadTrackRecord.current.length >= computerPadTrackRecord.current.length) {
                 if (isCorrectAnwser()) {
+                    setUserScore(prev => prev + 1);
                     userPadTrackRecord.current = [];
-                   setTimeout(() => computerPlayPad(), 1000);
+                    setTimeout(() => computerPlayPad(), 1000);
+                    await updateUserMaxScore(userScore + 1);
                 }
                 else {
-                    alert('nao foi dessa vez');
-                    updateUserRecord(userPadTrackRecord.current.length);
+                    setIsLostGame(true);
+                    Alert.alert('Errou', `Ops, infelizmente você errou no ponto ${formatScore(userScore)}.
+                                \nTente novamente clicando no botão Restart.`);
+                    await updateUserMaxScore(userScore);
+
                     userPadTrackRecord.current = [];
                     computerPadTrackRecord.current = [];
                 }
             }
         }
-    }
+    };
+
+    const formatScore = useCallback((score) => {
+        if (score == 0) return score;
+        if (String(score).length == 1) return `0${score}`;
+        else return score;
+    }, []);
 
     return (
         <View style={styles.container} >
-            <View style={styles.gameWrapper}>
 
+            <View style={styles.topContainer}>
+                <View style={styles.recordTextContainer}>
+                    <Text style={styles.recordLabelText} >Your record is:</Text>
+                    <Text style={styles.recordValueText}>{formatScore(userMaxScore)}</Text>
+                </View>
+                <Text style={styles.recordLabelText}>Let's increase it!</Text>
+            </View>
+
+            <View style={styles.gameWrapper}>
                 <View style={styles.topWrapper}>
                     <TouchableOpacity
                         style={[styles.greenPad,
@@ -94,6 +142,7 @@ const Game = () => {
                         }]}
                         activeOpacity={1}
                         onPress={() => handlePlayPad(EPadColor.GREEN, true)}
+                        disabled={computerPlaying}
                     />
                     <TouchableOpacity
                         style={[styles.redPad,
@@ -104,6 +153,7 @@ const Game = () => {
                         }]}
                         activeOpacity={1}
                         onPress={() => handlePlayPad(EPadColor.RED, true)}
+                        disabled={computerPlaying}
                     />
                 </View>
 
@@ -117,6 +167,7 @@ const Game = () => {
                         }]}
                         activeOpacity={1}
                         onPress={() => handlePlayPad(EPadColor.YELLOW, true)}
+                        disabled={computerPlaying}
                     />
                     <TouchableOpacity
                         style={[styles.bluePad,
@@ -127,20 +178,47 @@ const Game = () => {
                         }]}
                         activeOpacity={1}
                         onPress={() => handlePlayPad(EPadColor.BLUE, true)}
+                        disabled={computerPlaying}
                     />
                 </View>
 
                 <View style={styles.centerWrapper}>
-
+                    {userScore == 0 && !isLostGame
+                        ? <ButtonIcon
+                            iconName="play"
+                            iconColor={colors.gray}
+                            onPress={() => computerPlayPad(true)}
+                        />
+                        : <>
+                            <View>
+                                <Text style={styles.scoreLabelText}>SCORE</Text>
+                            </View>
+                            <View>
+                                <Text style={styles.scoreValueText}>{formatScore(userScore)}</Text>
+                            </View>
+                        </>
+                    }
                 </View>
-
             </View>
-            <TouchableOpacity onPress={() => computerPlayPad()}>
-                <Text>Play</Text>
 
-                <Text>Score</Text>
-                <Text>{maxScore}</Text>
-            </TouchableOpacity>
+            <View style={styles.buttonsContainer}>
+                <ButtonIcon
+                    iconName="speedometer"
+                    onPress={() => toggleDifficultyModal()}
+                    disabled={userScore > 0 && !isLostGame}
+                />
+                {isLostGame &&
+                    <ButtonIcon
+                        iconName="reload-circle"
+                        onPress={() => {
+                            setUserScore(0);
+                            setIsLostGame(false);
+                            computerPlayPad(true);
+                        }}
+                        disabled={computerPlaying}
+                    />
+                }
+            </View>
         </View>
     );
 };

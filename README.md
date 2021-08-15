@@ -1,3 +1,5 @@
+Testar / instalar no IOS => icon e async storage
+
 Teste
 
 Haverá 4 cores disponíveis para click no aplicativo. 

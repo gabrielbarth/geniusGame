@@ -1,4 +1,5 @@
 import { StyleSheet } from 'react-native';
+import { darken } from 'polished';
 
 import { getResponsiveHeight } from '../../utils/getResponsiveHeight';
 
@@ -18,6 +19,7 @@ const styles = StyleSheet.create({
         backgroundColor: colors.black,
         alignItems: 'center',
         justifyContent: 'center',
+        elevation: 20
     },
     bottomWrapper: {
         flexDirection: 'row'       
@@ -27,7 +29,10 @@ const styles = StyleSheet.create({
         width: getResponsiveHeight(20),
         height: getResponsiveHeight(20),
         borderRadius: getResponsiveHeight(20),
-        backgroundColor: colors.black
+        backgroundColor: colors.black,
+        justifyContent: 'center',
+        alignItems: 'center',
+        elevation: 10
     },
     topWrapper: {
         flexDirection: 'row'       
@@ -39,7 +44,8 @@ const styles = StyleSheet.create({
         backgroundColor: colors.green,
         borderWidth: 2,
         borderColor: colors.black,
-        opacity: 0.7
+        opacity: 0.7,
+        elevation: 10
     },
     redPad: {
         width: getResponsiveHeight(28),
@@ -48,7 +54,8 @@ const styles = StyleSheet.create({
         backgroundColor: colors.red,
         borderWidth: 2,
         borderColor: colors.black,
-        opacity: 0.7
+        opacity: 0.7,
+        elevation: 10
     },
     bluePad: {
         width: getResponsiveHeight(28),
@@ -57,7 +64,8 @@ const styles = StyleSheet.create({
         backgroundColor: colors.blue,
         borderWidth: 2,
         borderColor: colors.black,
-        opacity: 0.7
+        opacity: 0.7,
+        elevation: 10
     },
     yellowPad: {
         width: getResponsiveHeight(28),
@@ -66,9 +74,42 @@ const styles = StyleSheet.create({
         backgroundColor: colors.yellow,
         borderWidth: 2,
         borderColor: colors.black,
-        opacity: 0.7
+        opacity: 0.7,
+        elevation: 10
     },
-    
+    scoreLabelText: {
+        fontSize: getResponsiveHeight(3),
+        color: colors.gray,
+    },
+    scoreValueText: {
+        fontSize: getResponsiveHeight(3.5),
+        color: darken(0.2, colors.background),
+    },
+    topContainer: {
+        width: '100%',
+        paddingVertical: getResponsiveHeight(3.5),
+    },
+    recordTextContainer: {
+        flexDirection: 'row',
+        justifyContent: 'center'
+    },
+    recordLabelText: {
+        fontSize: getResponsiveHeight(3),
+        color: colors.black,
+        textAlign: 'center'
+    },
+    recordValueText: {
+        fontSize: getResponsiveHeight(3),
+        color: colors.blue,
+        marginLeft: getResponsiveHeight(1),
+        textAlign: 'center'
+    },
+    buttonsContainer: {
+        flexDirection: 'row' ,
+        width: '100%',
+        justifyContent: 'space-around',
+        marginTop: getResponsiveHeight(3),
+    }
 });
 
 export { styles };
