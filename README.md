@@ -18,7 +18,7 @@
 ### Interface do GeniusGame
 
 <p align="center">
-  <img src="assets/app.png" width="400">
+  <img src="assets/app.png" width="500">
 </p>
 <br>
 
